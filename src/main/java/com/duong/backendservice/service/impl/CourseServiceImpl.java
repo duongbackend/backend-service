@@ -5,17 +5,25 @@ import com.duong.backendservice.dto.request.CreateCourseRequest;
 import com.duong.backendservice.dto.request.UpdateCourseRequest;
 import com.duong.backendservice.dto.response.CourseDetailResponse;
 import com.duong.backendservice.dto.response.CreateCourseResponse;
+import com.duong.backendservice.dto.response.PageResponse;
 import com.duong.backendservice.entity.Course;
 import com.duong.backendservice.mapper.CourseMapper;
 import com.duong.backendservice.repository.CourseRepository;
+import com.duong.backendservice.repository.specification.CourseSpecification;
 import com.duong.backendservice.service.CourseService;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -81,5 +89,37 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.save(course);
 
         return courseMapper.toCourseDetailResponse(course);
+    }
+
+    @Override
+    public PageResponse<CourseDetailResponse> getCourses(int page, int size, String name, BigDecimal from, BigDecimal to) {
+        if(page <= 0){
+            page = 1;
+        }
+
+        if(size <= 0 || size > 20){
+            size = 20;
+        }
+
+        Specification<Course> courseSpecification = Specification.allOf(
+                CourseSpecification.hasName(name),
+                CourseSpecification.from(from),
+                CourseSpecification.to(to)
+        );
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Course> coursePage = courseRepository.findAll(courseSpecification, pageable);
+        List<Course> courses = coursePage.getContent();
+        List<CourseDetailResponse> content = courses.stream()
+                .map(courseMapper::toCourseDetailResponse)
+                .toList();
+
+        return PageResponse.<CourseDetailResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalPages(coursePage.getTotalPages())
+                .totalElements(coursePage.getTotalElements())
+                .content(content)
+                .build();
     }
 }
