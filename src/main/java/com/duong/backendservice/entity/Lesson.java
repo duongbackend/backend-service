@@ -1,8 +1,11 @@
 package com.duong.backendservice.entity;
 
 import com.duong.backendservice.common.LessonFormat;
+import com.duong.backendservice.common.LessonStatus;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "lessons")
@@ -28,7 +31,14 @@ public class Lesson {
 
     private Boolean isFreePreview;
 
-    @ManyToOne
-    @JoinColumn(name = "chapter_id")
+    @Enumerated(EnumType.STRING)
+    private LessonStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "chapter_id", nullable = false)
     private Chapter chapter;
+
+    private Instant createdAt;
+
+    private Instant updatedAt;
 }

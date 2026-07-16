@@ -1,12 +1,11 @@
 package com.duong.backendservice.service;
 
+import com.duong.backendservice.dto.request.CourseSearchRequest;
 import com.duong.backendservice.dto.request.CreateCourseRequest;
 import com.duong.backendservice.dto.request.UpdateCourseRequest;
 import com.duong.backendservice.dto.response.CourseDetailResponse;
 import com.duong.backendservice.dto.response.CreateCourseResponse;
 import com.duong.backendservice.dto.response.PageResponse;
-
-import java.math.BigDecimal;
 
 public interface CourseService {
     CreateCourseResponse createCourse(CreateCourseRequest request);
@@ -17,5 +16,5 @@ public interface CourseService {
 
     CourseDetailResponse updateCourse(String id, UpdateCourseRequest request);
 
-    PageResponse<CourseDetailResponse> getCourses(int page, int size, String name, BigDecimal from, BigDecimal to);
+    PageResponse<CourseDetailResponse> getCourses(CourseSearchRequest courseSearchRequest);
 }

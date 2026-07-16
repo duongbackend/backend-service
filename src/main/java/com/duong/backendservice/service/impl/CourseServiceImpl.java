@@ -1,6 +1,7 @@
 package com.duong.backendservice.service.impl;
 
 import com.duong.backendservice.common.CourseStatus;
+import com.duong.backendservice.dto.request.CourseSearchRequest;
 import com.duong.backendservice.dto.request.CreateCourseRequest;
 import com.duong.backendservice.dto.request.UpdateCourseRequest;
 import com.duong.backendservice.dto.response.CourseDetailResponse;
@@ -21,7 +22,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -31,10 +31,10 @@ import java.util.List;
 public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final CourseMapper courseMapper;
+    private final Slugify slugify;
 
     @Override
     public CreateCourseResponse createCourse(CreateCourseRequest request) {
-        Slugify slugify = Slugify.builder().build();
         String slug = slugify.slugify(request.name());
         if(courseRepository.existsBySlug(slug)){
             slug = slug + "-" + System.currentTimeMillis();
@@ -76,7 +76,6 @@ public class CourseServiceImpl implements CourseService {
         }
 
         if(StringUtils.hasText(request.name())){
-            Slugify slugify = Slugify.builder().build();
             String slug = slugify.slugify(request.name());
             if(courseRepository.existsBySlug(slug)){
                 slug = slug + "-" + System.currentTimeMillis();
@@ -92,7 +91,10 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public PageResponse<CourseDetailResponse> getCourses(int page, int size, String name, BigDecimal from, BigDecimal to) {
+    public PageResponse<CourseDetailResponse> getCourses(CourseSearchRequest searchRequest) {
+        int page = searchRequest.getPage();
+        int size = searchRequest.getSize();
+
         if(page <= 0){
             page = 1;
         }
@@ -102,9 +104,9 @@ public class CourseServiceImpl implements CourseService {
         }
 
         Specification<Course> courseSpecification = Specification.allOf(
-                CourseSpecification.hasName(name),
-                CourseSpecification.from(from),
-                CourseSpecification.to(to)
+                CourseSpecification.hasName(searchRequest.getName()),
+                CourseSpecification.from(searchRequest.getFrom()),
+                CourseSpecification.to(searchRequest.getTo())
         );
 
         Pageable pageable = PageRequest.of(page - 1, size);
