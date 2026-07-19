@@ -18,7 +18,7 @@ public class ChapterController {
     private final ChapterService chapterService;
 
     @PostMapping
-    ApiResponse<CreateChapterResponse> createCourse(@RequestBody @Valid CreateChapterRequest request){
+    ApiResponse<CreateChapterResponse> createChapter(@RequestBody @Valid CreateChapterRequest request){
         CreateChapterResponse data = chapterService.createChapter(request);
         return ApiResponse.<CreateChapterResponse>builder()
                 .status("success")
@@ -27,7 +27,7 @@ public class ChapterController {
     }
 
     @PutMapping("/{id}")
-    ApiResponse<ChapterDetailResponse> updateCourse(@PathVariable String id, @RequestBody UpdateChapterRequest request){
+    ApiResponse<ChapterDetailResponse> updateChapter(@PathVariable String id, @RequestBody @Valid UpdateChapterRequest request){
         ChapterDetailResponse data = chapterService.updateChapter(id, request);
         return ApiResponse.<ChapterDetailResponse>builder()
                 .status("success")
@@ -36,7 +36,7 @@ public class ChapterController {
     }
 
     @GetMapping("/{slug}")
-    ApiResponse<ChapterDetailResponse> getCourseBySlug(@PathVariable String slug){
+    ApiResponse<ChapterDetailResponse> getChapterBySlug(@PathVariable String slug){
         ChapterDetailResponse data = chapterService.getChapterBySlug(slug);
         return ApiResponse.<ChapterDetailResponse>builder()
                 .status("success")
@@ -45,7 +45,7 @@ public class ChapterController {
     }
 
     @DeleteMapping("/{slug}")
-    ApiResponse<Void> deleteCourse(@PathVariable String slug){
+    ApiResponse<Void> deleteChapter(@PathVariable String slug){
         chapterService.deleteChapter(slug);
         return ApiResponse.<Void>builder()
                 .status("success")

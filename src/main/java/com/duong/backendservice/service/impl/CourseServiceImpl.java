@@ -8,6 +8,8 @@ import com.duong.backendservice.dto.response.CourseDetailResponse;
 import com.duong.backendservice.dto.response.CreateCourseResponse;
 import com.duong.backendservice.dto.response.PageResponse;
 import com.duong.backendservice.entity.Course;
+import com.duong.backendservice.exception.AppException;
+import com.duong.backendservice.exception.ErrorCode;
 import com.duong.backendservice.mapper.CourseMapper;
 import com.duong.backendservice.repository.CourseRepository;
 import com.duong.backendservice.repository.specification.CourseSpecification;
@@ -53,13 +55,13 @@ public class CourseServiceImpl implements CourseService {
     public CourseDetailResponse getCourseBySlug(String slug) {
         return courseRepository.findBySlug(slug)
                 .map(courseMapper::toCourseDetailResponse)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.COURSE_NOT_FOUND));
     }
 
     @Override
     public void deleteCourse(String id) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.COURSE_NOT_FOUND));
         course.setStatus(CourseStatus.INACTIVE);
         courseRepository.save(course);
 
@@ -69,10 +71,10 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public CourseDetailResponse updateCourse(String id, UpdateCourseRequest request) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.COURSE_NOT_FOUND));
 
         if(course.getStatus() == CourseStatus.INACTIVE){
-            throw new RuntimeException("Course is inactive");
+            throw new AppException(ErrorCode.COURSE_INACTIVE);
         }
 
         if(StringUtils.hasText(request.name())){

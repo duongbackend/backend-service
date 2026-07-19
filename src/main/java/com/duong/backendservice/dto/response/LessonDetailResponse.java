@@ -1,9 +1,11 @@
 package com.duong.backendservice.dto.response;
 
 import com.duong.backendservice.common.LessonFormat;
+import lombok.Builder;
 
 import java.time.Instant;
 
+@Builder
 public record LessonDetailResponse(
         String id,
         String lessonName,

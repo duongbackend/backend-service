@@ -9,6 +9,8 @@ import com.duong.backendservice.dto.response.LessonDetailResponse;
 import com.duong.backendservice.dto.response.PageResponse;
 import com.duong.backendservice.entity.Chapter;
 import com.duong.backendservice.entity.Lesson;
+import com.duong.backendservice.exception.AppException;
+import com.duong.backendservice.exception.ErrorCode;
 import com.duong.backendservice.mapper.LessonMapper;
 import com.duong.backendservice.repository.ChapterRepository;
 import com.duong.backendservice.repository.LessonRepository;
@@ -37,9 +39,9 @@ public class LessonServiceImpl implements LessonService {
     @Override
     public CreateLessonResponse createLesson(CreateLessonRequest request) {
         Chapter chapter = chapterRepository.findById(request.chapterId())
-                .orElseThrow(() -> new RuntimeException("Chapter not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
         if(chapter.getStatus() == ChapterStatus.INACTIVE){
-            throw new RuntimeException("Chapter is inactive");
+            throw new AppException(ErrorCode.CHAPTER_INACTIVE);
         }
 
         Lesson lesson = lessonMapper.toLesson(request);
@@ -56,18 +58,18 @@ public class LessonServiceImpl implements LessonService {
     @Override
     public LessonDetailResponse updateLesson(String id, UpdateLessonRequest request) {
         Lesson lesson = lessonRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
 
         if(lesson.getStatus() == LessonStatus.INACTIVE){
-            throw new RuntimeException("Lesson is inactive");
+            throw new AppException(ErrorCode.LESSON_INACTIVE);
         }
 
         if(StringUtils.hasText(request.chapterId()) && !request.chapterId().equals(lesson.getChapter().getId())){
             Chapter chapter = chapterRepository.findById(request.chapterId())
-                    .orElseThrow(() -> new RuntimeException("Chapter not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
 
             if(chapter.getStatus() == ChapterStatus.INACTIVE){
-                throw new RuntimeException("Chapter is inactive");
+                throw new AppException(ErrorCode.CHAPTER_INACTIVE);
             }
 
             lesson.setChapter(chapter);
@@ -84,13 +86,13 @@ public class LessonServiceImpl implements LessonService {
     public LessonDetailResponse getLessonById(String id) {
         return lessonRepository.findById(id)
                 .map(lessonMapper::toLessonDetailResponse)
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
     }
 
     @Override
     public void deleteLesson(String id) {
         Lesson lesson = lessonRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Lesson not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
         lesson.setStatus(LessonStatus.INACTIVE);
         lesson.setUpdatedAt(Instant.now());
         lessonRepository.save(lesson);

@@ -8,6 +8,8 @@ import com.duong.backendservice.dto.response.CreateChapterResponse;
 import com.duong.backendservice.dto.response.PageResponse;
 import com.duong.backendservice.entity.Chapter;
 import com.duong.backendservice.entity.Course;
+import com.duong.backendservice.exception.AppException;
+import com.duong.backendservice.exception.ErrorCode;
 import com.duong.backendservice.mapper.ChapterMapper;
 import com.duong.backendservice.repository.ChapterRepository;
 import com.duong.backendservice.repository.CourseRepository;
@@ -38,7 +40,7 @@ public class ChapterServiceImpl implements ChapterService {
     @Override
     public CreateChapterResponse createChapter(CreateChapterRequest request) {
         Course course = courseRepository.findById(request.courseId())
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.COURSE_NOT_FOUND));
 
         String name = request.chapterName();
         String slug = slugify.slugify(name);
@@ -63,10 +65,10 @@ public class ChapterServiceImpl implements ChapterService {
     @Override
     public ChapterDetailResponse updateChapter(String id, UpdateChapterRequest request) {
         Chapter chapter = chapterRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Chapter not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
 
         if(chapter.getStatus() == ChapterStatus.INACTIVE){
-            throw new RuntimeException("Chapter is inactive");
+            throw new AppException(ErrorCode.CHAPTER_INACTIVE);
         }
 
         if(StringUtils.hasText(request.chapterName()) && !request.chapterName().equals(chapter.getChapterName())){
@@ -79,7 +81,7 @@ public class ChapterServiceImpl implements ChapterService {
 
         if(StringUtils.hasText(request.courseId()) && !request.courseId().equals(chapter.getCourse().getId())){
             Course course = courseRepository.findById(request.courseId())
-                    .orElseThrow(() -> new RuntimeException("Course not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.COURSE_NOT_FOUND));
             chapter.setCourse(course);
         }
 
@@ -94,13 +96,14 @@ public class ChapterServiceImpl implements ChapterService {
     public ChapterDetailResponse getChapterBySlug(String slug) {
         return chapterRepository.findBySlug(slug)
                 .map(chapterMapper::toChapterDetailResponse)
-                .orElseThrow(() -> new RuntimeException("Chapter not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
     }
 
     @Override
     public void deleteChapter(String id) {
         Chapter chapter = chapterRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Chapter not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CHAPTER_NOT_FOUND));
+
         chapter.setStatus(ChapterStatus.INACTIVE);
         chapter.setUpdatedAt(Instant.now());
         chapterRepository.save(chapter);
