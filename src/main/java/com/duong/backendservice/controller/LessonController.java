@@ -7,6 +7,7 @@ import com.duong.backendservice.dto.response.LessonDetailResponse;
 import com.duong.backendservice.dto.response.CreateLessonResponse;
 import com.duong.backendservice.dto.response.PageResponse;
 import com.duong.backendservice.service.LessonService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class LessonController {
     private final LessonService lessonService;
 
     @PostMapping
-    ApiResponse<CreateLessonResponse> createLesson(@RequestBody CreateLessonRequest request){
+    ApiResponse<CreateLessonResponse> createLesson(@RequestBody @Valid CreateLessonRequest request){
         CreateLessonResponse data = lessonService.createLesson(request);
         return ApiResponse.<CreateLessonResponse>builder()
                 .status("success")
@@ -26,7 +27,7 @@ public class LessonController {
     }
 
     @PutMapping("/{id}")
-    ApiResponse<LessonDetailResponse> updateLesson(@PathVariable String id, @RequestBody UpdateLessonRequest request){
+    ApiResponse<LessonDetailResponse> updateLesson(@PathVariable String id, @RequestBody @Valid UpdateLessonRequest request){
         LessonDetailResponse data = lessonService.updateLesson(id, request);
         return ApiResponse.<LessonDetailResponse>builder()
                 .status("success")

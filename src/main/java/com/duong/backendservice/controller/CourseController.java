@@ -8,6 +8,7 @@ import com.duong.backendservice.dto.response.CourseDetailResponse;
 import com.duong.backendservice.dto.response.CreateCourseResponse;
 import com.duong.backendservice.dto.response.PageResponse;
 import com.duong.backendservice.service.CourseService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +19,7 @@ public class CourseController {
     private final CourseService courseService;
 
     @PostMapping
-    ApiResponse<CreateCourseResponse> createCourse(@RequestBody CreateCourseRequest request) {
+    ApiResponse<CreateCourseResponse> createCourse(@RequestBody @Valid CreateCourseRequest request) {
         CreateCourseResponse data = courseService.createCourse(request);
 
         return ApiResponse.<CreateCourseResponse>builder()
@@ -46,7 +47,7 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    ApiResponse<CourseDetailResponse> updateCourse(@PathVariable String id, @RequestBody UpdateCourseRequest request){
+    ApiResponse<CourseDetailResponse> updateCourse(@PathVariable String id, @RequestBody @Valid UpdateCourseRequest request){
         CourseDetailResponse data = courseService.updateCourse(id, request);
         return ApiResponse.<CourseDetailResponse>builder()
                 .status("success")
