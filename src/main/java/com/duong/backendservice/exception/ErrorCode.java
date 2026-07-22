@@ -8,9 +8,13 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
-    COURSE_NOT_FOUND(404, "Course not found", HttpStatus.NOT_FOUND),
-    USER_EXISTED(409, "User already existed", HttpStatus.CONFLICT),
     COURSE_INACTIVE(409, "Course is inactive", HttpStatus.CONFLICT),
+    COURSE_NOT_FOUND(404, "Course not found", HttpStatus.NOT_FOUND),
+
+    USER_EXISTED(409, "User already existed", HttpStatus.CONFLICT),
+    USER_NOT_FOUND(404, "User not found", HttpStatus.NOT_FOUND),
+
+    UNAUTHORIZED(401, "Unauthorized", HttpStatus.UNAUTHORIZED),
 
     CHAPTER_NOT_FOUND(404, "Chapter not found", HttpStatus.NOT_FOUND),
     CHAPTER_INACTIVE(409, "Chapter is inactive", HttpStatus.CONFLICT),
