@@ -4,7 +4,7 @@ import com.duong.backendservice.dto.request.CreateUserRequest;
 import com.duong.backendservice.dto.request.LoginRequest;
 import com.duong.backendservice.dto.response.ApiResponse;
 import com.duong.backendservice.dto.response.CreateUserResponse;
-import com.duong.backendservice.dto.response.UserDetailResponse;
+import com.duong.backendservice.dto.response.LoginResponse;
 import com.duong.backendservice.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +30,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    ApiResponse<UserDetailResponse> login(@RequestBody @Valid LoginRequest request){
-        UserDetailResponse data = authService.login(request);
-        return ApiResponse.<UserDetailResponse>builder()
+    ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request){
+        LoginResponse data = authService.login(request);
+        return ApiResponse.<LoginResponse>builder()
                 .status("success")
                 .data(data)
                 .build();
