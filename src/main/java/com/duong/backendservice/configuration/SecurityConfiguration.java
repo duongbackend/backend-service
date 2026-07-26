@@ -1,5 +1,8 @@
 package com.duong.backendservice.configuration;
 
+import com.duong.backendservice.security.JwtAccessDeniedHandler;
+import com.duong.backendservice.security.JwtAuthenticationEntryPoint;
+import com.duong.backendservice.security.JwtTokenTypeValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +17,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -46,7 +53,10 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET,GET_WHITELIST).permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults()))
+                        .jwt(Customizer.withDefaults())
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                        .accessDeniedHandler(new JwtAccessDeniedHandler())
+                )
                 .build();
     }
 
@@ -66,8 +76,16 @@ public class SecurityConfiguration {
     @Bean
     JwtDecoder jwtDecoder(){
         SecretKey secretKey = new SecretKeySpec(this.secretKey.getBytes(StandardCharsets.UTF_8), "HS256");
-        return NimbusJwtDecoder.withSecretKey(secretKey)
+        NimbusJwtDecoder nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
+
+        JwtTokenTypeValidator tokenTypeValidator = new JwtTokenTypeValidator();
+        OAuth2TokenValidator<Jwt> defaultValidator = JwtValidators.createDefault();
+
+        OAuth2TokenValidator<Jwt> jwtValidator = new DelegatingOAuth2TokenValidator<>(tokenTypeValidator, defaultValidator);
+        nimbusJwtDecoder.setJwtValidator(jwtValidator);
+
+        return nimbusJwtDecoder;
     }
 }

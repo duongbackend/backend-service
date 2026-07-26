@@ -1,5 +1,6 @@
 package com.duong.backendservice.service.impl;
 
+import com.duong.backendservice.common.TokenType;
 import com.duong.backendservice.entity.User;
 import com.duong.backendservice.service.JwtService;
 import com.nimbusds.jose.JOSEException;
@@ -33,6 +34,7 @@ public class JwtServiceImpl implements JwtService {
                 .subject(user.getId())
                 .issueTime(issueTime)
                 .expirationTime(expirationTime)
+                .claim("typ", TokenType.ACCESS.name())
                 .build();
 
         SignedJWT signedJWT = new SignedJWT(header, jwtClaimsSet);
@@ -55,6 +57,7 @@ public class JwtServiceImpl implements JwtService {
                 .subject(user.getId())
                 .issueTime(issueTime)
                 .expirationTime(expirationTime)
+                .claim("typ", TokenType.REFRESH.name())
                 .build();
 
         SignedJWT signedJWT = new SignedJWT(header, jwtClaimsSet);

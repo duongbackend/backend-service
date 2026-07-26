@@ -6,12 +6,17 @@ import com.duong.backendservice.dto.response.ApiResponse;
 import com.duong.backendservice.dto.response.CreateUserResponse;
 import com.duong.backendservice.dto.response.LoginResponse;
 import com.duong.backendservice.service.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,8 +35,20 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request){
+    ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response){
         LoginResponse data = authService.login(request);
+        String refreshToken = data.getRefreshToken();
+
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+                .path("/")
+                .httpOnly(true)
+                .secure(false)
+                .maxAge(Duration.ofDays(14))
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        data.setRefreshToken(null);
+
         return ApiResponse.<LoginResponse>builder()
                 .status("success")
                 .data(data)

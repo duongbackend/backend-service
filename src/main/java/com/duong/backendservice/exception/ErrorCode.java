@@ -15,6 +15,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "User not found", HttpStatus.NOT_FOUND),
 
     UNAUTHORIZED(401, "Unauthorized", HttpStatus.UNAUTHORIZED),
+    ACCESS_DENIED(403, "Access denied", HttpStatus.FORBIDDEN),
 
     CHAPTER_NOT_FOUND(404, "Chapter not found", HttpStatus.NOT_FOUND),
     CHAPTER_INACTIVE(409, "Chapter is inactive", HttpStatus.CONFLICT),
