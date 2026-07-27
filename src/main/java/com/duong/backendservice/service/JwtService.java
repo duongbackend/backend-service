@@ -1,9 +1,15 @@
 package com.duong.backendservice.service;
 
-import com.duong.backendservice.entity.User;
+import com.duong.backendservice.common.TokenType;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.SignedJWT;
+
+import java.text.ParseException;
 
 public interface JwtService {
-    String generateAccessToken(User user);
+    String generateAccessToken(String userId);
 
-    String generateRefreshToken(User user);
+    String generateRefreshToken(String userId);
+
+    SignedJWT validateToken(String token, TokenType tokenType) throws ParseException, JOSEException;
 }

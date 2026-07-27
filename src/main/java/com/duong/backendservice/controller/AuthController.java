@@ -11,10 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
@@ -52,6 +49,35 @@ public class AuthController {
         return ApiResponse.<LoginResponse>builder()
                 .status("success")
                 .data(data)
+                .build();
+    }
+
+    @PostMapping("/refresh-token")
+    ApiResponse<LoginResponse> refreshToken(@CookieValue(name = "refresh_token") String refreshToken){
+        LoginResponse data = authService.refreshToken(refreshToken);
+
+        return ApiResponse.<LoginResponse>builder()
+                .status("success")
+                .data(data)
+                .build();
+    }
+
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@CookieValue(name = "refresh_token") String refreshToken, HttpServletResponse response){
+        authService.logout(refreshToken);
+
+        ResponseCookie responseCookie = ResponseCookie.from("refresh_token", "")
+                .path("/")
+                .httpOnly(true)
+                .secure(false)
+                .maxAge(Duration.ZERO)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
+
+        return ApiResponse.<Void>builder()
+                .status("success")
+                .message("Logout successfully")
                 .build();
     }
 }

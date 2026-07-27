@@ -1,21 +1,27 @@
 package com.duong.backendservice.service.impl;
 
 import com.duong.backendservice.common.TokenType;
-import com.duong.backendservice.entity.User;
+import com.duong.backendservice.exception.AppException;
+import com.duong.backendservice.exception.ErrorCode;
+import com.duong.backendservice.repository.TokenRepository;
 import com.duong.backendservice.service.JwtService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,17 +30,20 @@ public class JwtServiceImpl implements JwtService {
     @Value("${jwt.secret-key}")
     private String secretKey;
 
+    private final TokenRepository tokenRepository;
+
     @Override
-    public String generateAccessToken(User user) {
+    public String generateAccessToken(String userId) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         Date issueTime = new Date();
         Date expirationTime = Date.from(issueTime.toInstant().plus(15, ChronoUnit.MINUTES));
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getId())
+                .subject(userId)
                 .issueTime(issueTime)
                 .expirationTime(expirationTime)
-                .claim("typ", TokenType.ACCESS.name())
+                .claim("type", TokenType.ACCESS.name())
+                .jwtID(UUID.randomUUID().toString())
                 .build();
 
         SignedJWT signedJWT = new SignedJWT(header, jwtClaimsSet);
@@ -47,17 +56,18 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateRefreshToken(User user) {
+    public String generateRefreshToken(String userId) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         Date issueTime = new Date();
         Date expirationTime = Date.from(issueTime.toInstant().plus(14, ChronoUnit.DAYS));
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getId())
+                .subject(userId)
                 .issueTime(issueTime)
                 .expirationTime(expirationTime)
-                .claim("typ", TokenType.REFRESH.name())
+                .claim("type", TokenType.REFRESH.name())
+                .jwtID(UUID.randomUUID().toString())
                 .build();
 
         SignedJWT signedJWT = new SignedJWT(header, jwtClaimsSet);
@@ -67,5 +77,35 @@ public class JwtServiceImpl implements JwtService {
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public SignedJWT validateToken(String token, TokenType tokenType) throws ParseException, JOSEException {
+        if(!StringUtils.hasText(token)){
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        boolean isValid = signedJWT.verify(new MACVerifier(secretKey));
+        if(!isValid){
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        TokenType type = TokenType.valueOf(signedJWT.getJWTClaimsSet().getClaimAsString("type"));
+        if(type != tokenType){
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        if(expirationTime.before(new Date())){
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        String jwtID = signedJWT.getJWTClaimsSet().getJWTID();
+        if(type == TokenType.REFRESH && tokenRepository.existsById(jwtID)){
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        return signedJWT;
     }
 }

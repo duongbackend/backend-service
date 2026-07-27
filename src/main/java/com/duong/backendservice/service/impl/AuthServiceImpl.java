@@ -1,17 +1,22 @@
 package com.duong.backendservice.service.impl;
 
+import com.duong.backendservice.common.TokenType;
 import com.duong.backendservice.common.UserStatus;
 import com.duong.backendservice.dto.request.CreateUserRequest;
 import com.duong.backendservice.dto.request.LoginRequest;
 import com.duong.backendservice.dto.response.CreateUserResponse;
 import com.duong.backendservice.dto.response.LoginResponse;
+import com.duong.backendservice.entity.Token;
 import com.duong.backendservice.entity.User;
 import com.duong.backendservice.exception.AppException;
 import com.duong.backendservice.exception.ErrorCode;
 import com.duong.backendservice.mapper.UserMapper;
+import com.duong.backendservice.repository.TokenRepository;
 import com.duong.backendservice.repository.UserRepository;
 import com.duong.backendservice.service.AuthService;
 import com.duong.backendservice.service.JwtService;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +27,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final TokenRepository tokenRepository;
 
     @Override
     public CreateUserResponse register(CreateUserRequest request) {
@@ -62,8 +70,8 @@ public class AuthServiceImpl implements AuthService {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            String accessToken = jwtService.generateAccessToken(user);
-            String refreshToken = jwtService.generateRefreshToken(user);
+            String accessToken = jwtService.generateAccessToken(user.getId());
+            String refreshToken = jwtService.generateRefreshToken(user.getId());
 
             Set<String> authorities = user.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
@@ -77,6 +85,42 @@ public class AuthServiceImpl implements AuthService {
                     .build();
         } catch (AuthenticationException e) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+    }
+
+    @Override
+    public LoginResponse refreshToken(String refreshToken) {
+        try {
+            SignedJWT signedJWT = jwtService.validateToken(refreshToken, TokenType.REFRESH);
+            String userId = signedJWT.getJWTClaimsSet().getSubject();
+            String accessToken = jwtService.generateAccessToken(userId);
+
+            return LoginResponse.builder()
+                    .userId(userId)
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .authorities(Set.of())
+                    .build();
+        } catch (ParseException | JOSEException e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        try {
+            SignedJWT signedJWT = jwtService.validateToken(refreshToken, TokenType.REFRESH);
+            String jwtID = signedJWT.getJWTClaimsSet().getJWTID();
+            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+            Token token = Token.builder()
+                    .jwtID(jwtID)
+                    .expirationTime(expirationTime)
+                    .build();
+
+            tokenRepository.save(token);
+        } catch (ParseException | JOSEException e) {
+            log.error("Error while logout: {}", e.getMessage());
         }
     }
 }
