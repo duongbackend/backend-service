@@ -12,7 +12,7 @@ public class JwtTokenTypeValidator implements OAuth2TokenValidator<Jwt> {
 
     @Override
     public OAuth2TokenValidatorResult validate(@NonNull Jwt token) {
-        TokenType tokenType = TokenType.valueOf(token.getClaimAsString("typ"));
+        TokenType tokenType = TokenType.valueOf(token.getClaimAsString("type"));
         if(tokenType != TokenType.ACCESS){
             ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
             return OAuth2TokenValidatorResult.failure(new OAuth2Error(errorCode.name(), errorCode.getMessage(), null));

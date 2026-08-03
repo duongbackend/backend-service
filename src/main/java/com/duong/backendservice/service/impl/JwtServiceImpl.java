@@ -21,7 +21,9 @@ import org.springframework.util.StringUtils;
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class JwtServiceImpl implements JwtService {
     private final TokenRepository tokenRepository;
 
     @Override
-    public String generateAccessToken(String userId) {
+    public String generateAccessToken(String userId, Set<String> authorities) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         Date issueTime = new Date();
@@ -43,6 +45,7 @@ public class JwtServiceImpl implements JwtService {
                 .issueTime(issueTime)
                 .expirationTime(expirationTime)
                 .claim("type", TokenType.ACCESS.name())
+                .claim("authorities", authorities)
                 .jwtID(UUID.randomUUID().toString())
                 .build();
 
@@ -60,7 +63,7 @@ public class JwtServiceImpl implements JwtService {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         Date issueTime = new Date();
-        Date expirationTime = Date.from(issueTime.toInstant().plus(2, ChronoUnit.MINUTES));
+        Date expirationTime = Date.from(issueTime.toInstant().plus(14, ChronoUnit.DAYS));
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(userId)
@@ -107,5 +110,19 @@ public class JwtServiceImpl implements JwtService {
         }
 
         return signedJWT;
+    }
+
+    @Override
+    public Set<String> getAuthorities(Object authoritiesClaim) {
+        if(authoritiesClaim == null){
+            return Set.of();
+        }
+
+        if(authoritiesClaim instanceof Set<?> authorities){
+            return authorities.stream().map(String::valueOf)
+                    .collect(Collectors.toSet());
+        }
+
+        return Set.of();
     }
 }

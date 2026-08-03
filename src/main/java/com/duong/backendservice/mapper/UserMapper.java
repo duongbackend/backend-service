@@ -2,6 +2,7 @@ package com.duong.backendservice.mapper;
 
 import com.duong.backendservice.dto.request.CreateUserRequest;
 import com.duong.backendservice.dto.response.CreateUserResponse;
+import com.duong.backendservice.dto.response.UserDetailResponse;
 import com.duong.backendservice.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,4 +13,6 @@ public interface UserMapper {
     User toUser(CreateUserRequest request);
 
     CreateUserResponse toCreateUserResponse(User user);
+
+    UserDetailResponse toUserDetailResponse(User user);
 }

@@ -1,11 +1,13 @@
 package com.duong.backendservice.service.impl;
 
+import com.duong.backendservice.common.RoleName;
 import com.duong.backendservice.common.TokenType;
 import com.duong.backendservice.common.UserStatus;
 import com.duong.backendservice.dto.request.CreateUserRequest;
 import com.duong.backendservice.dto.request.LoginRequest;
 import com.duong.backendservice.dto.response.CreateUserResponse;
 import com.duong.backendservice.dto.response.LoginResponse;
+import com.duong.backendservice.entity.Role;
 import com.duong.backendservice.entity.Token;
 import com.duong.backendservice.entity.User;
 import com.duong.backendservice.exception.AppException;
@@ -15,6 +17,7 @@ import com.duong.backendservice.repository.TokenRepository;
 import com.duong.backendservice.repository.UserRepository;
 import com.duong.backendservice.service.AuthService;
 import com.duong.backendservice.service.JwtService;
+import com.duong.backendservice.service.RoleService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
+    private final RoleService roleService;
 
     @Override
     public CreateUserResponse register(CreateUserRequest request) {
@@ -52,6 +56,9 @@ public class AuthServiceImpl implements AuthService {
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setUserStatus(UserStatus.ACTIVE);
+
+        Role defaultRole = roleService.getOrCreateRole(RoleName.USER);
+        user.addRole(defaultRole);
 
         userRepository.save(user);
         return userMapper.toCreateUserResponse(user);
@@ -70,12 +77,12 @@ public class AuthServiceImpl implements AuthService {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            String accessToken = jwtService.generateAccessToken(user.getId());
-            String refreshToken = jwtService.generateRefreshToken(user.getId());
-
             Set<String> authorities = user.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toSet());
+
+            String accessToken = jwtService.generateAccessToken(user.getId(), authorities);
+            String refreshToken = jwtService.generateRefreshToken(user.getId());
 
             return LoginResponse.builder()
                     .userId(user.getId())
@@ -93,7 +100,8 @@ public class AuthServiceImpl implements AuthService {
         try {
             SignedJWT signedJWT = jwtService.validateToken(refreshToken, TokenType.REFRESH);
             String userId = signedJWT.getJWTClaimsSet().getSubject();
-            String accessToken = jwtService.generateAccessToken(userId);
+            Set<String> authorities = jwtService.getAuthorities(signedJWT.getJWTClaimsSet().getClaim("authorities"));
+            String accessToken = jwtService.generateAccessToken(userId, authorities);
 
             return LoginResponse.builder()
                     .userId(userId)
