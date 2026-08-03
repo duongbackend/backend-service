@@ -1,14 +1,14 @@
 package com.duong.backendservice.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 
-import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
-@Entity
-@Table(name = "tokens")
+@RedisHash("redis_token")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,5 +18,9 @@ public class Token {
     @Id
     private String jwtID;
 
-    private Date expirationTime;
+    @TimeToLive(unit = TimeUnit.SECONDS)
+    private long secondsTtl;
+
+    @NotBlank
+    private String userId;
 }

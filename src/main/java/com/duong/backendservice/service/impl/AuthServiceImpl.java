@@ -113,12 +113,15 @@ public class AuthServiceImpl implements AuthService {
             String jwtID = signedJWT.getJWTClaimsSet().getJWTID();
             Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
+            long secondsTtl = (expirationTime.getTime() - new Date().getTime()) / 1000;
             Token token = Token.builder()
                     .jwtID(jwtID)
-                    .expirationTime(expirationTime)
+                    .secondsTtl(secondsTtl)
                     .build();
 
             tokenRepository.save(token);
+
+            log.info("Logout success with jwtID: {}", jwtID);
         } catch (ParseException | JOSEException e) {
             log.error("Error while logout: {}", e.getMessage());
         }

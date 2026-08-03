@@ -60,7 +60,7 @@ public class JwtServiceImpl implements JwtService {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
 
         Date issueTime = new Date();
-        Date expirationTime = Date.from(issueTime.toInstant().plus(14, ChronoUnit.DAYS));
+        Date expirationTime = Date.from(issueTime.toInstant().plus(2, ChronoUnit.MINUTES));
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(userId)
