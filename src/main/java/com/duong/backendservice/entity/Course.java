@@ -35,7 +35,7 @@ public class Course {
 
     private Double hours;
 
-    private String thumbnailUrl;
+    private String thumbnailKey;
 
     @Enumerated(EnumType.STRING)
     private CourseStatus status;
