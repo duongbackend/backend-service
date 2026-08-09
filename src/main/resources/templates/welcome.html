@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chào mừng bạn</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, Helvetica, sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color: #f4f4f4; padding: 30px 10px;">
+    <tr>
+        <td align="center">
+
+            <table width="600" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width: 600px; width: 100%; background-color: #ffffff;
+                          border-radius: 8px; overflow: hidden;">
+
+                <tr>
+                    <td align="center"
+                        style="background-color: #1f2937; padding: 30px 20px;">
+                        <h1 style="margin: 0; color: #ffffff; font-size: 26px;">
+                            Chào mừng bạn!
+                        </h1>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 35px 30px; color: #333333;">
+
+                        <h2 style="margin-top: 0; font-size: 22px;">
+                            Xin chào <span th:text="${name}">Nguyễn Văn A</span>,
+                        </h2>
+
+                        <p style="font-size: 16px; line-height: 1.6;">
+                            Cảm ơn bạn đã đăng ký tài khoản.
+                        </p>
+
+                        <p style="font-size: 16px; line-height: 1.6;">
+                            Tài khoản của bạn đã được tạo thành công.
+                            Bạn có thể bắt đầu sử dụng hệ thống ngay bây giờ.
+                        </p>
+
+                        <p style="font-size: 16px; line-height: 1.6;">
+                            Chúc bạn có những trải nghiệm tuyệt vời!
+                        </p>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td align="center"
+                        style="background-color: #f9fafb;
+                               padding: 20px;
+                               font-size: 13px;
+                               color: #888888;">
+
+                        <p style="margin: 0;">
+                            Email này được gửi tự động, vui lòng không trả lời.
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

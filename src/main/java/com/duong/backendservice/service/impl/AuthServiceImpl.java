@@ -17,11 +17,13 @@ import com.duong.backendservice.repository.TokenRepository;
 import com.duong.backendservice.repository.UserRepository;
 import com.duong.backendservice.service.AuthService;
 import com.duong.backendservice.service.JwtService;
+import com.duong.backendservice.service.MailService;
 import com.duong.backendservice.service.RoleService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,6 +35,9 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,6 +51,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final RoleService roleService;
+    private final MailService mailService;
+
+    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
     @Override
     public CreateUserResponse register(CreateUserRequest request) {
@@ -61,6 +69,8 @@ public class AuthServiceImpl implements AuthService {
         user.addRole(defaultRole);
 
         userRepository.save(user);
+        mailService.sendEmail(user.getEmail(), user.getName(), "Welcome " + user.getName() + " to E-Learning Platform", "welcome");
+
         return userMapper.toCreateUserResponse(user);
     }
 
