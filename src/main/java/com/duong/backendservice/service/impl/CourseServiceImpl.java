@@ -14,6 +14,7 @@ import com.duong.backendservice.mapper.CourseMapper;
 import com.duong.backendservice.repository.CourseRepository;
 import com.duong.backendservice.repository.specification.CourseSpecification;
 import com.duong.backendservice.service.CourseService;
+import com.duong.backendservice.service.FileStorageService;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final CourseMapper courseMapper;
     private final Slugify slugify;
+    private final FileStorageService fileStorageService;
 
     @Override
     public CreateCourseResponse createCourse(CreateCourseRequest request) {
@@ -48,7 +50,10 @@ public class CourseServiceImpl implements CourseService {
         course.setStatus(CourseStatus.ACTIVE);
 
         courseRepository.save(course);
-        return courseMapper.toCreateCourseResponse(course);
+
+        CreateCourseResponse response = courseMapper.toCreateCourseResponse(course);
+        response.setThumbnailUrl(fileStorageService.resolveUrl(course.getThumbnailKey()));
+        return response;
     }
 
     @Override

@@ -21,6 +21,6 @@ public record CreateCourseRequest(
         @Min(value = 0, message = "Hours must be greater than or equal to 0")
         Double hours,
 
-        String thumbnailUrl
+        String thumbnailKey
 ) {
 }

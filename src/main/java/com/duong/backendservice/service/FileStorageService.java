@@ -10,4 +10,6 @@ public interface FileStorageService {
     FileResponse uploadFile(MultipartFile file) throws IOException;
 
     PresignerUrlResponse getPresignerUrl(String fileName);
+
+    String resolveUrl(String key);
 }

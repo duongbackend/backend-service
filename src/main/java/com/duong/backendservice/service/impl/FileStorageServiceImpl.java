@@ -28,6 +28,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
+    @Value("${aws.region}")
+    private String region;
+
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
@@ -75,6 +78,15 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .url(url)
                 .key(key)
                 .build();
+    }
+
+    @Override
+    public String resolveUrl(String key) {
+        if(!StringUtils.hasText(key)){
+            return null;
+        }
+
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
     }
 
     private String generateKey(String fileName){
