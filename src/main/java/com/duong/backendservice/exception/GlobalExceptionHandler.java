@@ -1,5 +1,6 @@
 package com.duong.backendservice.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.context.request.WebRequest;
 import java.util.List;
 
 @RestControllerAdvice
+@Slf4j(topic = "GLOBAL-EXCEPTION-HANDLER")
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppException.class)
@@ -48,5 +50,11 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception exception){
+        log.error("Exception: {}", exception.getMessage(), exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
     }
 }

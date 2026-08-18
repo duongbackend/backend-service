@@ -1,12 +1,17 @@
 package com.duong.backendservice.configuration;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.interceptor.CacheErrorHandler;
+import org.springframework.cache.interceptor.LoggingCacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -17,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class RedisConfiguration {
+public class RedisConfiguration implements CachingConfigurer {
     @Value("${spring.data.redis.host}")
     private String redisHost;
 
@@ -29,7 +34,14 @@ public class RedisConfiguration {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisHost, redisPort));
+        RedisStandaloneConfiguration standaloneConfiguration = new RedisStandaloneConfiguration(redisHost, redisPort);
+
+        LettuceClientConfiguration lettuceClientConfiguration = LettuceClientConfiguration.builder()
+                .commandTimeout(Duration.ofSeconds(1))
+                .shutdownTimeout(Duration.ofSeconds(1))
+                .build();
+
+        return new LettuceConnectionFactory(standaloneConfiguration, lettuceClientConfiguration);
     }
 
     @Bean
@@ -50,5 +62,10 @@ public class RedisConfiguration {
         return RedisCacheManager.builder(connectionFactory)
                 .withInitialCacheConfigurations(initialCaches)
                 .build();
+    }
+
+    @Override
+    public @Nullable CacheErrorHandler errorHandler() {
+        return new LoggingCacheErrorHandler();
     }
 }
