@@ -8,10 +8,13 @@ import com.duong.backendservice.repository.UserRepository;
 import com.duong.backendservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+import static com.duong.backendservice.configuration.RedisConfiguration.USER_INFO_CACHE;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
+    @Cacheable(value = USER_INFO_CACHE, key = "#id")
     @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.name")
     @Override
     public UserDetailResponse getUserById(String id) {

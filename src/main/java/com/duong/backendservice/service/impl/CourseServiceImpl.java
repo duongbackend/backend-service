@@ -18,6 +18,8 @@ import com.duong.backendservice.service.FileStorageService;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,8 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.util.List;
 
+import static com.duong.backendservice.configuration.RedisConfiguration.COURSES_CACHE;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j(topic = "COURSE-SERVICE")
@@ -37,6 +41,7 @@ public class CourseServiceImpl implements CourseService {
     private final Slugify slugify;
     private final FileStorageService fileStorageService;
 
+    @CacheEvict(value = COURSES_CACHE, allEntries = true)
     @Override
     public CreateCourseResponse createCourse(CreateCourseRequest request) {
         String slug = slugify.slugify(request.name());
@@ -97,8 +102,15 @@ public class CourseServiceImpl implements CourseService {
         return courseMapper.toCourseDetailResponse(course);
     }
 
+    @Cacheable(value = COURSES_CACHE,
+            key = "'page:' + #searchRequest.page " +
+                "+ '-size:' + #searchRequest.size " +
+                "+ '-name:' + #searchRequest.name " +
+                "+ '-from:' + #searchRequest.from " +
+                "+ '-to:' + #searchRequest.to")
     @Override
     public PageResponse<CourseDetailResponse> getCourses(CourseSearchRequest searchRequest) {
+        log.info("Searching for courses");
         int page = searchRequest.getPage();
         int size = searchRequest.getSize();
 
