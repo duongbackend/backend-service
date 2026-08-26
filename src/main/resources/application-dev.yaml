@@ -35,6 +35,9 @@ spring:
           starttls:
             enable: true
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
 jwt:
   secret-key: ${JWT_SECRET_KEY}
 

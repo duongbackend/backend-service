@@ -1,11 +1,13 @@
 package com.duong.backendservice.service.impl;
 
+import com.duong.backendservice.dto.event.UserCreatedEvent;
 import com.duong.backendservice.service.MailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -53,6 +55,32 @@ public class MailServiceImpl implements MailService {
             log.info("Send email to email: {}", to);
         } catch (MessagingException | UnsupportedEncodingException e) {
             log.error("Send email error to email: {} {}", to, e.getMessage());
+        }
+    }
+
+    @KafkaListener(topics = "user-created", groupId = "email-group")
+    public void userCreated(UserCreatedEvent event) {
+        MimeMessage message = javaMailSender.createMimeMessage();
+
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, StandardCharsets.UTF_8.name());
+            helper.setFrom(from, "BackendService");
+            helper.setTo(event.getEmail());
+            helper.setSubject("Welcome " + event.getName() +" to E-Learning Platform");
+            helper.setSentDate(new Date());
+
+            Context context = new Context();
+            context.setVariable("name", event.getName());
+
+            String htmlContent = templateEngine.process(event.getTemplateName(), context);
+
+            helper.setText(htmlContent, true);
+
+            javaMailSender.send(message);
+
+            log.info("Send email to email: {}", event.getEmail());
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            log.error("Send email error to email: {} {}", event.getEmail(), e.getMessage());
         }
     }
 }
