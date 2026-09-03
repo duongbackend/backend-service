@@ -7,7 +7,9 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.BackOff;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -59,6 +61,7 @@ public class MailServiceImpl implements MailService {
     }
 
     @KafkaListener(topics = "user-created", groupId = "email-group")
+    @RetryableTopic(attempts = "4", backOff = @BackOff(multiplier = 2, maxDelay = 1000)) // 1s, 2s, 4s, 8s
     public void userCreated(UserCreatedEvent event) {
         MimeMessage message = javaMailSender.createMimeMessage();
 
