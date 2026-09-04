@@ -8,8 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.BackOff;
+import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.retrytopic.DltStrategy;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -60,30 +62,42 @@ public class MailServiceImpl implements MailService {
         }
     }
 
+//    @KafkaListener(topics = "user-created", groupId = "email-group")
+//    @RetryableTopic(attempts = "4", backOff = @BackOff(multiplier = 2, maxDelay = 1000)) // 1s, 2s, 4s, 8s
+//    public void userCreated(UserCreatedEvent event) {
+//        MimeMessage message = javaMailSender.createMimeMessage();
+//
+//        try {
+//            MimeMessageHelper helper = new MimeMessageHelper(message, StandardCharsets.UTF_8.name());
+//            helper.setFrom(from, "BackendService");
+//            helper.setTo(event.getEmail());
+//            helper.setSubject("Welcome " + event.getName() +" to E-Learning Platform");
+//            helper.setSentDate(new Date());
+//
+//            Context context = new Context();
+//            context.setVariable("name", event.getName());
+//
+//            String htmlContent = templateEngine.process(event.getTemplateName(), context);
+//
+//            helper.setText(htmlContent, true);
+//
+//            javaMailSender.send(message);
+//
+//            log.info("Send email to email: {}", event.getEmail());
+//        } catch (MessagingException | UnsupportedEncodingException e) {
+//            log.error("Send email error to email: {} {}", event.getEmail(), e.getMessage());
+//        }
+//    }
+
     @KafkaListener(topics = "user-created", groupId = "email-group")
-    @RetryableTopic(attempts = "4", backOff = @BackOff(multiplier = 2, maxDelay = 1000)) // 1s, 2s, 4s, 8s
+    @RetryableTopic(attempts = "4", backOff = @BackOff(multiplier = 2, delay = 1000)) // 1s, 2s, 4s, 8s
     public void userCreated(UserCreatedEvent event) {
-        MimeMessage message = javaMailSender.createMimeMessage();
+        log.info("Received user created event: {}", event);
+        throw new RuntimeException("Error while sending email");
+    }
 
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, StandardCharsets.UTF_8.name());
-            helper.setFrom(from, "BackendService");
-            helper.setTo(event.getEmail());
-            helper.setSubject("Welcome " + event.getName() +" to E-Learning Platform");
-            helper.setSentDate(new Date());
-
-            Context context = new Context();
-            context.setVariable("name", event.getName());
-
-            String htmlContent = templateEngine.process(event.getTemplateName(), context);
-
-            helper.setText(htmlContent, true);
-
-            javaMailSender.send(message);
-
-            log.info("Send email to email: {}", event.getEmail());
-        } catch (MessagingException | UnsupportedEncodingException e) {
-            log.error("Send email error to email: {} {}", event.getEmail(), e.getMessage());
-        }
+    @DltHandler
+    public void dltUserCreated(UserCreatedEvent event) {
+        log.info("Received DLT user created event: {}", event);
     }
 }

@@ -39,6 +39,7 @@ public class KafkaProducerConfiguration {
     public NewTopic userCreated(){
         return TopicBuilder.name("user-created")
                 .partitions(3)
+                .replicas(3)
                 .build();
     }
 }

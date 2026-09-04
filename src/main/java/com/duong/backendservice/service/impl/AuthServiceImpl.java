@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
                 .name(user.getName())
                 .templateName("welcome")
                 .build();
-        kafkaTemplate.send(user.getId(), "user-created", event)
+        kafkaTemplate.send("user-created", user.getId(), event)
                 .whenComplete((_, throwable) -> {
                     if(throwable != null) {
                         log.error("Error while sending user created event", throwable);
