@@ -79,6 +79,7 @@ public class AuthServiceImpl implements AuthService {
                     }
                 });
 
+        log.info("User created successfully: {}", user);
         return userMapper.toCreateUserResponse(user);
     }
 
