@@ -7,9 +7,9 @@ services:
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: backend-service
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d 123456"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d backend-service"]
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     networks:
@@ -43,7 +43,7 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_NODE_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
@@ -61,7 +61,7 @@ services:
       - application_network
 
   backend-service:
-    image: duongit2003/backend-service:1.0
+    image: duongit2003/backend-service:2.0
     container_name: backend-service
     ports:
       - "8080:8080"
@@ -77,10 +77,52 @@ services:
     networks:
       - application_network
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - application_network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+    ports:
+      - "5601:5601"
+    networks:
+      - application_network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.3.0
+    container_name: logstash
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - application_network
+
 volumes:
   postgres-data:
   redis-data:
   kafka-data:
+  elasticsearch_data:
 
 networks:
   application_network:

@@ -54,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public CreateUserResponse register(CreateUserRequest request) {
         if(userRepository.existsByEmail(request.email())){
+            log.error("User with email: {} already existed", request.email());
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
@@ -109,6 +110,7 @@ public class AuthServiceImpl implements AuthService {
                     .authorities(authorities)
                     .build();
         } catch (AuthenticationException e) {
+            log.error("Error while login: {}", e.getMessage());
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
     }
