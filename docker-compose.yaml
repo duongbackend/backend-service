@@ -60,69 +60,111 @@ services:
     networks:
       - application_network
 
-  backend-service:
-    image: duongit2003/backend-service:2.0
-    container_name: backend-service
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-          condition: service_healthy
-      redis:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    networks:
-      - application_network
+#  backend-service:
+#    image: duongit2003/backend-service:2.0
+#    container_name: backend-service
+#    ports:
+#      - "8080:8080"
+#    env_file:
+#      - .env
+#    depends_on:
+#      postgres:
+#          condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
+#    networks:
+#      - application_network
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - xpack.security.transport.ssl.enabled=false
-      - xpack.security.http.ssl.enabled=false
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+  prometheus:
+    image: prom/prometheus:v3.13.4
+    container_name: prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "9090:9090"
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert-rules.yml:/etc/prometheus/alert-rules.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
     networks:
       - application_network
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:9.3.0
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - xpack.security.enabled=false
-      - xpack.security.transport.ssl.enabled=false
+  grafana:
+    image: grafana/grafana:13.2.1
+    container_name: grafana
     ports:
-      - "5601:5601"
-    networks:
-      - application_network
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:9.3.0
-    container_name: logstash
-    ports:
-      - "5000:5000"
+      - "3000:3000"
     volumes:
-      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-    depends_on:
-      - elasticsearch
+      - grafana-data:/var/lib/grafana
     networks:
       - application_network
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    networks:
+      - application_network
+
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+#    container_name: elasticsearch
+#    environment:
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false
+#      - xpack.security.transport.ssl.enabled=false
+#      - xpack.security.http.ssl.enabled=false
+#      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
+#    volumes:
+#      - elasticsearch_data:/usr/share/elasticsearch/data
+#    networks:
+#      - application_network
+#
+#  kibana:
+#    image: docker.elastic.co/kibana/kibana:9.3.0
+#    container_name: kibana
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+#      - xpack.security.enabled=false
+#      - xpack.security.transport.ssl.enabled=false
+#    ports:
+#      - "5601:5601"
+#    networks:
+#      - application_network
+#
+#  logstash:
+#    image: docker.elastic.co/logstash/logstash:9.3.0
+#    container_name: logstash
+#    ports:
+#      - "5000:5000"
+#    volumes:
+#      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+#    depends_on:
+#      - elasticsearch
+#    networks:
+#      - application_network
 
 volumes:
   postgres-data:
   redis-data:
   kafka-data:
-  elasticsearch_data:
+#  elasticsearch_data:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:
 
 networks:
   application_network:

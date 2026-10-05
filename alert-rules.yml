@@ -1,0 +1,22 @@
+groups:
+  - name: 'backend-service-alert-rule'
+    rules:
+      - alert: BackendServiceDown
+        expr: 'up{job="backend-service"} == 0'
+        for: 5s
+        labels:
+          severity: critical
+          service: backend-service
+        annotations:
+          summary: 'Backend service is down'
+          description: 'The backend service is currently unavailable.'
+
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[1m])) by (le)) > 5
+        for: 5s
+        labels:
+          severity: warning
+          service: backend-service
+        annotations:
+          summary: 'Slow response time detected'
+          description: 'The backend service is experiencing slow response times.'

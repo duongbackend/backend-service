@@ -1,0 +1,39 @@
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'tranduong1812003@gmail.com'
+  smtp_auth_username: 'tranduong1812003@gmail.com'
+  smtp_auth_password: 'thukyctdoigbukpo'
+  smtp_require_tls: true
+
+route:
+  receiver: 'email-receiver'
+  group_by: ['alertname', 'service', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+
+receivers:
+  - name: 'email-receiver'
+    email_configs:
+      - to: 'duongthichvo@gmail.com'
+        send_resolved: true
+        headers:
+          Subject: 'Alert Notification BackendService'
+        html: |
+          <div style="font-family: Arial, sans-serif; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #d9534f;">🚨 CẢNH BÁO SỰ CỐ HỆ THỐNG: {{ .GroupLabels.alertname }}</h2>
+            <p><strong>Trạng thái:</strong> <span style="font-weight: bold; color: red;">{{ .Status | toUpper }}</span></p>
+            <p><strong>Mức độ nghiêm trọng:</strong> {{ .GroupLabels.severity }}</p>
+            <p><strong>Dịch vụ gặp sự cố:</strong> {{ .GroupLabels.service }}</p>
+            <hr style="border: none; border-top: 1px solid #eee;" />
+            {{ range .Alerts }}
+              <div style="background-color: #f9f9f9; padding: 10px; margin-bottom: 10px; border-left: 4px solid #d9534f;">
+                <h4 style="margin: 0 0 5px 0;">{{ .Annotations.summary }}</h4>
+                <p style="margin: 0 0 5px 0;">{{ .Annotations.description }}</p>
+                <p style="font-size: 12px; color: #777; margin: 0;"><strong>Bắt đầu lúc:</strong> {{ .StartsAt }}</p>
+                {{ if .EndsAt }}
+                  <p style="font-size: 12px; color: green; margin: 0;"><strong>Kết thúc lúc:</strong> {{ .EndsAt }}</p>
+                {{ end }}
+              </div>
+            {{ end }}
+          </div>

@@ -41,7 +41,7 @@ public class SecurityConfiguration {
     private String secretKey;
 
     private static final String[] GET_WHITELIST = {
-            "/api/courses",
+            "/api/courses", "/actuator/**"
     };
 
     private static final String[] POST_WHITELIST = {

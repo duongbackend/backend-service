@@ -5,3 +5,28 @@ spring:
     name: backend-service
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health, info, prometheus"
+        exclude: "env, beans"
+  endpoint:
+    health:
+      show-details: ALWAYS
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Backend Service
+    version: 1.0.0

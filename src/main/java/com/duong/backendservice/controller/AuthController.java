@@ -22,7 +22,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    ApiResponse<CreateUserResponse> register(@RequestBody @Valid CreateUserRequest request){
+    ApiResponse<CreateUserResponse> register(@RequestBody @Valid CreateUserRequest request) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(6));
         CreateUserResponse data = authService.register(request);
         return ApiResponse.<CreateUserResponse>builder()
                 .status("success")
@@ -32,7 +33,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response){
+    ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) throws InterruptedException {
+        Thread.sleep(Duration.ofSeconds(6));
         LoginResponse data = authService.login(request);
         String refreshToken = data.getRefreshToken();
 
