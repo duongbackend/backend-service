@@ -19,5 +19,6 @@ public class LoginResponse {
     private String userId;
     private String accessToken;
     private String refreshToken;
+    private Boolean totpEnabled;
     private Set<String> authorities;
 }

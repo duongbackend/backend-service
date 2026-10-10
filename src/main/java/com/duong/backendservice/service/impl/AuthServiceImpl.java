@@ -6,6 +6,7 @@ import com.duong.backendservice.common.UserStatus;
 import com.duong.backendservice.dto.event.UserCreatedEvent;
 import com.duong.backendservice.dto.request.CreateUserRequest;
 import com.duong.backendservice.dto.request.LoginRequest;
+import com.duong.backendservice.dto.request.TOTPAuthRequest;
 import com.duong.backendservice.dto.response.CreateUserResponse;
 import com.duong.backendservice.dto.response.LoginResponse;
 import com.duong.backendservice.entity.Role;
@@ -19,6 +20,7 @@ import com.duong.backendservice.repository.UserRepository;
 import com.duong.backendservice.service.AuthService;
 import com.duong.backendservice.service.JwtService;
 import com.duong.backendservice.service.RoleService;
+import com.duong.backendservice.service.TOTPService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final RoleService roleService;
+    private final TOTPService totpService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
@@ -96,6 +99,13 @@ public class AuthServiceImpl implements AuthService {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
+            if(Boolean.TRUE.equals(user.getTotpEnabled())){
+                return LoginResponse.builder()
+                        .userId(user.getId())
+                        .totpEnabled(true)
+                        .build();
+            }
+
             Set<String> authorities = user.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toSet());
@@ -113,6 +123,32 @@ public class AuthServiceImpl implements AuthService {
             log.error("Error while login: {}", e.getMessage());
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
+    }
+
+    @Override
+    public LoginResponse loginTOTP(TOTPAuthRequest request) {
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        String secret = user.getSecret();
+        boolean isCodeValid = totpService.isCodeValid(secret, request.code());
+        if(!isCodeValid){
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Set<String> authorities = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+        String accessToken = jwtService.generateAccessToken(user.getId(), authorities);
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        return LoginResponse.builder()
+                .userId(user.getId())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .authorities(authorities)
+                .build();
     }
 
     @Override

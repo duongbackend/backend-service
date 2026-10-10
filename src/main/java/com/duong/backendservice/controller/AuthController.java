@@ -2,6 +2,7 @@ package com.duong.backendservice.controller;
 
 import com.duong.backendservice.dto.request.CreateUserRequest;
 import com.duong.backendservice.dto.request.LoginRequest;
+import com.duong.backendservice.dto.request.TOTPAuthRequest;
 import com.duong.backendservice.dto.response.ApiResponse;
 import com.duong.backendservice.dto.response.CreateUserResponse;
 import com.duong.backendservice.dto.response.LoginResponse;
@@ -23,7 +24,7 @@ public class AuthController {
 
     @PostMapping("/register")
     ApiResponse<CreateUserResponse> register(@RequestBody @Valid CreateUserRequest request) throws InterruptedException {
-        Thread.sleep(Duration.ofSeconds(6));
+//        Thread.sleep(Duration.ofSeconds(6));
         CreateUserResponse data = authService.register(request);
         return ApiResponse.<CreateUserResponse>builder()
                 .status("success")
@@ -34,7 +35,7 @@ public class AuthController {
 
     @PostMapping("/login")
     ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) throws InterruptedException {
-        Thread.sleep(Duration.ofSeconds(6));
+//        Thread.sleep(Duration.ofSeconds(6));
         LoginResponse data = authService.login(request);
         String refreshToken = data.getRefreshToken();
 
@@ -45,6 +46,26 @@ public class AuthController {
                 .maxAge(Duration.ofDays(14))
                 .build();
 
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        data.setRefreshToken(null);
+
+        return ApiResponse.<LoginResponse>builder()
+                .status("success")
+                .data(data)
+                .build();
+    }
+
+    @PostMapping("/totp")
+    ApiResponse<LoginResponse> loginWithTOTP(@RequestBody @Valid TOTPAuthRequest request, HttpServletResponse response) {
+        LoginResponse data = authService.loginTOTP(request);
+        String refreshToken = data.getRefreshToken();
+
+        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+                .path("/")
+                .httpOnly(true)
+                .secure(false)
+                .maxAge(Duration.ofDays(14))
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         data.setRefreshToken(null);
 

@@ -39,6 +39,11 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserStatus userStatus;
 
+    private String secret;
+
+    @Builder.Default
+    private Boolean totpEnabled = Boolean.FALSE;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     public List<UserHasRole> userHasRoles = new ArrayList<>();
